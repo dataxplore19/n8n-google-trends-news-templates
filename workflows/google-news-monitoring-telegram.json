@@ -1,0 +1,199 @@
+{
+  "name": "Google News monitoring to Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "cea19904-d04e-4b70-9c6b-c4eb0cb33804",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8eddbfb4-21e1-4104-bcf5-009b4efb649e",
+              "name": "keywords",
+              "value": "openai, \"your brand\"",
+              "type": "string"
+            },
+            {
+              "id": "cf6c0fe8-1ef5-4ecc-b307-c5d5ea969b43",
+              "name": "region",
+              "value": "US:en",
+              "type": "string"
+            },
+            {
+              "id": "e9673043-cfe5-48f7-97f0-368410d8d70f",
+              "name": "timeframe",
+              "value": "1h",
+              "type": "string"
+            },
+            {
+              "id": "55fbb87b-5609-4780-89c8-46cd210ddd4b",
+              "name": "telegramChatId",
+              "value": "YOUR_CHAT_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "68c9c949-c245-47c8-b235-f113bc348dc2",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/data_xplorer~google-news-scraper-fast/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ keywords: $json.keywords.split(\",\").map(k => k.trim()).filter(k => k), timeframe: $json.timeframe, region_language: $json.region, maxArticles: 50, decodeUrls: true, extractDescriptions: true, extractImages: false }) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "f1aa4385-968c-4bf5-9632-79b85ca438d9",
+      "name": "Run Google News (Apify)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Apify (Header Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Keeps the articles not sent before (remembered for 30 days).\nconst memory = $getWorkflowStaticData('global');\nmemory.sent = memory.sent || {};\nconst now = Date.now();\nfor (const [k, t] of Object.entries(memory.sent)) if (now - t > 30 * 24 * 3600 * 1000) delete memory.sent[k];\nconst firstRun = Object.keys(memory.sent).length === 0;\n\nconst out = [];\nconst articles = $input.all().map((i) => i.json).filter((a) => a.url)\n  .sort((a, b) => String(a.publishedAt).localeCompare(String(b.publishedAt)));\nfor (const a of articles) {\n  if (memory.sent[a.url]) continue;\n  memory.sent[a.url] = now;\n  if (firstRun) continue; // the first run only fills the memory, so you are not flooded\n  out.push({ json: {\n    ...a,\n    text: `📰 ${a.title}\\n${a.source || ''}${a.publishedAt ? ' · ' + a.publishedAt.slice(0, 16).replace('T', ' ') + ' UTC' : ''}\\n`\n      + `${a.description ? a.description + '\\n' : ''}${a.url}`,\n  } });\n}\nreturn out;"
+      },
+      "id": "40b05052-35a9-4b30-a553-40786d7771fc",
+      "name": "Keep new articles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Settings').first().json.telegramChatId }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "edcc9335-6651-4715-8a58-f63b7b05d311",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        300
+      ],
+      "webhookId": "93c07c5b-41be-4898-9121-5510d0aaf652",
+      "credentials": {
+        "telegramApi": {
+          "id": "",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Google News monitoring\nEvery hour, searches Google News for your keywords (brand, competitors, topics) and sends each new article to Telegram with its source and real URL. The first run only remembers the current articles; after that you get each new one once.\n\n## Setup\n1. **Run ... (Apify)** node: create a *Header Auth* credential, name `Authorization`, value `Bearer YOUR_APIFY_TOKEN` (free account at apify.com, token in Settings > API & Integrations).\n2. **Send to Telegram**: add your bot credential.\n3. **Settings**: put your Telegram chat ID and your own values.\n4. *Test workflow*, then *Activate*.",
+        "height": 420,
+        "width": 440
+      },
+      "id": "467f10c2-ecf4-475c-ad02-74aeeaf6f111",
+      "name": "Note -480",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        120
+      ]
+    }
+  ],
+  "connections": {
+    "Every hour": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Run Google News (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Google News (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Keep new articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep new articles": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
