@@ -2,7 +2,7 @@
 
 Ready-to-import n8n workflows that bring Google Trends and Google News into your automations: trend alerts, news monitoring and a daily AI news digest, sent to Telegram. No code to write: import the JSON file, add two credentials, set your keywords and activate.
 
-The data comes from two Apify Actors: [Google Trends Scraper](https://apify.com/data_xplorer/google-trends-fast-scraper) and [Google News Scraper](https://apify.com/data_xplorer/google-news-scraper-fast). They are called with n8n's built-in HTTP Request node, so no community node is needed.
+The data comes from two Apify Actors: [Google Trends Scraper](https://apify.com/data_xplorer/google-trends-fast-scraper?fpr=6vi1cs) and [Google News Scraper](https://apify.com/data_xplorer/google-news-scraper-fast?fpr=6vi1cs). They are called with n8n's built-in HTTP Request node, so no community node is needed.
 
 > Click **Watch > Custom > Releases** at the top of this page to be notified of new templates.
 
@@ -17,7 +17,7 @@ The data comes from two Apify Actors: [Google Trends Scraper](https://apify.com/
 ## Setup
 
 1. **Import**: in n8n, open a new workflow, click the three dots at the top right, choose **Import from File** and select the JSON file. Or copy the file's content and paste it into the canvas.
-2. **Apify credential**: create a free [Apify](https://apify.com) account and copy your API token from [Settings > API & Integrations](https://console.apify.com/settings/integrations). In the node that calls Apify (**Fetch ... (Apify)** or **Run ... (Apify)**), create a **Header Auth** credential with name `Authorization` and value `Bearer your_apify_token`.
+2. **Apify credential**: create a free [Apify](https://apify.com?fpr=6vi1cs) account and copy your API token from [Settings > API & Integrations](https://console.apify.com/settings/integrations). In the node that calls Apify (**Fetch ... (Apify)** or **Run ... (Apify)**), create a **Header Auth** credential with name `Authorization` and value `Bearer your_apify_token`.
 3. **Telegram credential**: create a bot with [@BotFather](https://t.me/BotFather), then add a **Telegram** credential with its token in the Telegram node. Put your chat ID in the parameters node (**Set Alert Parameters** or **Settings**) (send a message to [@userinfobot](https://t.me/userinfobot) to get it).
 4. **OpenAI credential** (AI digest only): add your OpenAI API key in the **OpenAI Chat Model** node. Any other chat model node can replace it.
 5. **Parameters**: edit the parameters node (keywords, country, watch words), run the workflow once with **Test workflow**, then **Activate** it.
@@ -68,7 +68,7 @@ Yes. Replace the Telegram node with a Slack, Discord, Gmail or Send Email node a
 
 ## Disclosure
 
-I am the author of the two Apify Actors used by these workflows.
+I am the author of the two Apify Actors used by these workflows. Links to apify.com in this repository are referral links: if you create an Apify account through them, I may earn a commission at no cost to you.
 
 ## License
 
