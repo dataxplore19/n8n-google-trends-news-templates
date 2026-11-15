@@ -11,7 +11,7 @@
           ]
         }
       },
-      "id": "0b5bd314-a668-4e51-afa0-61882fa7c5ed",
+      "id": "8261bb01-83ef-4030-9457-0e1eca028eba",
       "name": "Every hour",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -25,25 +25,25 @@
         "assignments": {
           "assignments": [
             {
-              "id": "62d788cf-7df9-4afb-a6f2-38e908235e62",
+              "id": "bc8d44ba-6eea-49ea-aa6b-b0a1dbde4bb6",
               "name": "country",
               "value": "US",
               "type": "string"
             },
             {
-              "id": "b8ca6942-a08c-4d67-911f-3c74de32257e",
+              "id": "7c874111-612e-4216-a27d-c9ef8e59f717",
               "name": "hours",
               "value": "4",
               "type": "string"
             },
             {
-              "id": "ade9eacb-1611-4e7a-9fc7-84fd99a5d72d",
+              "id": "85109af0-0fe3-4291-bca3-905269a93bb3",
               "name": "watchWords",
               "value": "bitcoin, nvidia, openai",
               "type": "string"
             },
             {
-              "id": "2f46d669-42c3-46a1-96e8-793cf2713077",
+              "id": "3b3a9f39-5271-4f8f-b6ef-aa6b052e8bfa",
               "name": "telegramChatId",
               "value": "YOUR_CHAT_ID",
               "type": "string"
@@ -52,7 +52,7 @@
         },
         "options": {}
       },
-      "id": "77370de1-8da3-4e13-804d-ef06d0dcd40d",
+      "id": "ea9d7fee-c446-4cd8-ba09-6baaafa119fc",
       "name": "Settings",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -74,7 +74,7 @@
           "timeout": 300000
         }
       },
-      "id": "8e7d0acb-07fb-4a47-b164-48bced7b3fbf",
+      "id": "44207635-bff8-4eeb-9705-bab13f5580b8",
       "name": "Run Google Trends (Apify)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -82,6 +82,9 @@
         440,
         300
       ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "credentials": {
         "httpHeaderAuth": {
           "id": "",
@@ -93,7 +96,7 @@
       "parameters": {
         "jsCode": "// Keeps the trending searches that match a watch word, once per term.\nconst s = $('Settings').first().json;\nconst watch = String(s.watchWords || '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean);\nconst esc = (w) => w.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\nconst matches = (text, w) => new RegExp(`(^|[^\\\\p{L}\\\\p{N}])${esc(w)}($|[^\\\\p{L}\\\\p{N}])`, 'u').test(text);\n\nconst memory = $getWorkflowStaticData('global');\nmemory.sent = memory.sent || {};\nconst now = Date.now();\nfor (const [k, t] of Object.entries(memory.sent)) if (now - t > 7 * 24 * 3600 * 1000) delete memory.sent[k];\n\nconst out = [];\nfor (const item of $input.all()) {\n  for (const t of item.json.trending_searches || []) {\n    const text = [t.term, ...(t.related_terms || [])].join(' ').toLowerCase();\n    const hits = watch.filter((w) => matches(text, w));\n    const key = `${s.country}:${t.term}`;\n    if (!hits.length || memory.sent[key]) continue;\n    memory.sent[key] = now;\n    out.push({ json: {\n      term: t.term, volume: t.trend_volume, rank: t.rank, matches: hits,\n      text: `📈 Trending on Google (${s.country}): \"${t.term}\" (${t.trend_volume || '?'} searches, rank ${t.rank})\\n`\n        + `Matches: ${hits.join(', ')}\\nRelated: ${(t.related_terms || []).slice(1, 6).join(', ')}\\n`\n        + `https://trends.google.com/trending?geo=${s.country}`,\n    } });\n  }\n}\nreturn out;"
       },
-      "id": "f95d8cfd-4757-4e71-b00e-89a77f39174b",
+      "id": "296c9876-6bc6-487a-80fc-7fdad61c4c16",
       "name": "Keep new matches",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -111,7 +114,7 @@
           "disable_web_page_preview": true
         }
       },
-      "id": "89514e6d-57ac-48a8-b5df-d0641fb38b72",
+      "id": "606bf9aa-c415-46c1-9280-c3a11d33d3fe",
       "name": "Send to Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -119,7 +122,7 @@
         880,
         300
       ],
-      "webhookId": "15a7287d-0a62-439c-931f-35535d9c4b2d",
+      "webhookId": "2ada8350-3b3d-459e-9c74-26147b7263f0",
       "credentials": {
         "telegramApi": {
           "id": "",
@@ -129,17 +132,17 @@
     },
     {
       "parameters": {
-        "content": "## Google Trends alert\nEvery hour, reads Google's trending searches for a country and sends a Telegram message when a trend matches one of your watch words (whole words, also checked in related queries). Each term is sent once a week at most.\n\n## Setup\n1. **Run ... (Apify)** node: create a *Header Auth* credential, name `Authorization`, value `Bearer YOUR_APIFY_TOKEN` (free account at apify.com, token in Settings > API & Integrations).\n2. **Send to Telegram**: add your bot credential.\n3. **Settings**: put your Telegram chat ID and your own values.\n4. *Test workflow*, then *Activate*.",
-        "height": 420,
-        "width": 440
+        "content": "## Google Trends alert\nEvery hour, reads Google's trending searches for a country and sends a Telegram message when a trend matches one of your watch words (whole words, also checked in related queries). Each term is sent once a week at most.\n\n### Requirements\n- An Apify account (free plan works) and its API token\n- A Telegram bot (create one with @BotFather) and your chat ID\n\n### Setup\n1. **Run ... (Apify)** node: create a *Header Auth* credential, name `Authorization`, value `Bearer YOUR_APIFY_TOKEN` (free account at apify.com, token in Settings > API & Integrations).\n2. **Send to Telegram**: add your bot credential.\n3. **Settings**: put your Telegram chat ID and your own values.\n4. *Test workflow*, then *Activate*.\n\n### Limitations\n- Google's trending list covers the last 4 to 168 hours; a word that trends and fades between two runs can be missed with long intervals.\n- If the Apify call fails 3 times in a row, the run stops with an error and nothing is sent.",
+        "height": 660,
+        "width": 460
       },
-      "id": "15b58713-5338-46b0-b76f-04743cd7827b",
+      "id": "2f765322-9c6e-43a1-b31b-ce1345e7b450",
       "name": "Note -480",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -480,
-        120
+        -520,
+        0
       ]
     }
   ],

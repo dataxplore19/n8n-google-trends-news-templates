@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "3c62b1d9-5e3f-4c70-9621-7018e4b68eff",
+      "id": "62890f29-c68f-4856-91f4-3acac35dac78",
       "name": "Every morning at 8",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -26,31 +26,31 @@
         "assignments": {
           "assignments": [
             {
-              "id": "4c40d393-4659-4d3b-a73f-a4f7ea3b55a9",
+              "id": "0199f50f-5988-4556-89e6-3326c97b7a74",
               "name": "keywords",
               "value": "openai, nvidia",
               "type": "string"
             },
             {
-              "id": "41c51e22-ada0-4690-998d-7b47ede8a533",
+              "id": "5b80e35f-38fb-45f2-a9bc-ef762c5b50de",
               "name": "region",
               "value": "US:en",
               "type": "string"
             },
             {
-              "id": "991ae474-efd5-4838-8570-470c2e4a981e",
+              "id": "8854218a-5bc6-4284-a5f5-1dec8a5b27cd",
               "name": "maxArticles",
               "value": 10,
               "type": "number"
             },
             {
-              "id": "b1a7760d-296c-46fe-9c22-d0ea8467b3ae",
+              "id": "3494e00c-4130-420a-bfef-9744dd6db4b6",
               "name": "language",
               "value": "English",
               "type": "string"
             },
             {
-              "id": "d3a44380-ae82-450b-9a5f-2ae67d079661",
+              "id": "e2822551-95eb-4e72-a967-6a1ef6e61c4b",
               "name": "telegramChatId",
               "value": "YOUR_CHAT_ID",
               "type": "string"
@@ -59,7 +59,7 @@
         },
         "options": {}
       },
-      "id": "19da3e0a-8d30-4531-b45a-5ba1864cc136",
+      "id": "25268739-b676-4299-a3ae-ebd400c73e92",
       "name": "Settings",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -81,7 +81,7 @@
           "timeout": 300000
         }
       },
-      "id": "6be55cd2-83f7-42c0-aaf4-1a1ab8f5da5d",
+      "id": "17453f0b-97b0-4f7d-b378-bd806ea357cd",
       "name": "Run Google News (Apify)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -89,6 +89,9 @@
         440,
         300
       ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "credentials": {
         "httpHeaderAuth": {
           "id": "",
@@ -98,9 +101,9 @@
     },
     {
       "parameters": {
-        "jsCode": "// Builds one prompt with every article (title, source, URL and the start of the text).\nconst s = $('Settings').first().json;\nconst articles = $input.all().map((i) => i.json).filter((a) => a.title);\nconst blocks = articles.map((a, i) => `[${i + 1}] ${a.title}\\nSource: ${a.source || '?'} | ${a.publishedAt || ''}\\nURL: ${a.url}\\n`\n  + `${(a.fullText || a.description || '').slice(0, 1500)}`);\nreturn [{ json: {\n  count: articles.length,\n  prompt: `You write a short daily news digest in ${s.language} for the topics: ${s.keywords}.\\n`\n    + `Group related articles, keep the 5 to 8 most important stories, one or two sentences each, `\n    + `and end each story with its source and URL. Plain text, no markdown tables, under 3,000 characters.\\n\\n`\n    + `Articles of the last 24 hours:\\n\\n${blocks.join('\\n\\n')}`,\n} }];"
+        "jsCode": "// Builds one prompt with every article (title, source, URL and the start of the text).\nconst s = $('Settings').first().json;\nconst articles = $input.all().map((i) => i.json).filter((a) => a.title);\nif (!articles.length) return []; // nothing published: no digest, no message\nconst blocks = articles.map((a, i) => `[${i + 1}] ${a.title}\\nSource: ${a.source || '?'} | ${a.publishedAt || ''}\\nURL: ${a.url}\\n`\n  + `${(a.fullText || a.description || '').slice(0, 1500)}`);\nreturn [{ json: {\n  count: articles.length,\n  prompt: `You write a short daily news digest in ${s.language} for the topics: ${s.keywords}.\\n`\n    + `Group related articles, keep the 5 to 8 most important stories, one or two sentences each, `\n    + `and end each story with its source and URL. Plain text, no markdown tables, under 3,000 characters.\\n\\n`\n    + `Articles of the last 24 hours:\\n\\n${blocks.join('\\n\\n')}`,\n} }];"
       },
-      "id": "cab1e413-5d5e-454d-b6b4-47ca525b939e",
+      "id": "89ad1354-39f0-4505-bef1-cc55f4eae704",
       "name": "Build the prompt",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -114,7 +117,7 @@
         "promptType": "define",
         "text": "={{ $json.prompt }}"
       },
-      "id": "ec6d6db3-6a7c-48cd-a0eb-53bcca8e1795",
+      "id": "ea904ba4-2b8b-4fbe-901e-127966683820",
       "name": "Write the digest",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.5,
@@ -132,7 +135,7 @@
         },
         "options": {}
       },
-      "id": "e2c42bac-6612-4990-a540-3166814ff08e",
+      "id": "6da2e285-acbb-42f7-8528-de9e2d79eeaa",
       "name": "OpenAI Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
@@ -151,7 +154,7 @@
       "parameters": {
         "jsCode": "// Telegram messages are limited to 4,096 characters.\nconst s = $('Settings').first().json;\nconst body = String($json.text || '').trim();\nconst head = `🗞️ Daily news digest: ${s.keywords}\\n\\n`;\nreturn [{ json: { text: (head + body).slice(0, 4000) } }];"
       },
-      "id": "40e2b981-e3e1-4939-b43e-631d33b3cd31",
+      "id": "60084ea2-940b-47c0-aae0-e622bc883496",
       "name": "Format the message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -169,7 +172,7 @@
           "disable_web_page_preview": true
         }
       },
-      "id": "8d261a24-1101-477a-afae-41099dd03017",
+      "id": "ea4017cc-ae43-4994-8192-845654161909",
       "name": "Send to Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -177,7 +180,7 @@
         1320,
         300
       ],
-      "webhookId": "06aa4fcb-99e5-4c7c-89f9-159186928f35",
+      "webhookId": "0acd4232-b5c3-4c39-878a-c761c0b3a253",
       "credentials": {
         "telegramApi": {
           "id": "",
@@ -187,17 +190,17 @@
     },
     {
       "parameters": {
-        "content": "## Daily AI news digest\nEvery morning, gets the last 24 hours of Google News for your keywords with the full article text, asks an OpenAI model for a short digest and sends it to Telegram.\n\n## Setup\n1. **Run ... (Apify)** node: create a *Header Auth* credential, name `Authorization`, value `Bearer YOUR_APIFY_TOKEN` (free account at apify.com, token in Settings > API & Integrations).\n2. **Send to Telegram**: add your bot credential.\n3. **Settings**: put your Telegram chat ID and your own values.\n4. *Test workflow*, then *Activate*.\n5. **OpenAI Chat Model**: add your OpenAI key, or swap in any other chat model node.",
-        "height": 460,
-        "width": 440
+        "content": "## Daily AI news digest\nEvery morning, gets the last 24 hours of Google News for your keywords with the full article text, asks an OpenAI model for a short digest and sends it to Telegram. No article, no message.\n\n### Requirements\n- An Apify account (free plan works) and its API token\n- A Telegram bot (create one with @BotFather) and your chat ID\n\n- An OpenAI API key (or any other chat model node)\n\n### Setup\n1. **Run ... (Apify)** node: create a *Header Auth* credential, name `Authorization`, value `Bearer YOUR_APIFY_TOKEN` (free account at apify.com, token in Settings > API & Integrations).\n2. **Send to Telegram**: add your bot credential.\n3. **Settings**: put your Telegram chat ID and your own values.\n4. *Test workflow*, then *Activate*.\n5. **OpenAI Chat Model**: add your OpenAI key, or swap in any other chat model node.\n\n### Limitations\n- Paywalled sites may only give their first paragraphs, so their stories are summarized from the description.\n- The message is cut at 4,000 characters (Telegram limit).",
+        "height": 660,
+        "width": 460
       },
-      "id": "acfec229-40b2-4bb4-808c-4b9980949f8f",
+      "id": "adb450e7-a2a8-43ac-9c4f-05afe9609208",
       "name": "Note -480",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -480,
-        100
+        -520,
+        0
       ]
     }
   ],

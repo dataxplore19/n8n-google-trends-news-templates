@@ -11,7 +11,7 @@
           ]
         }
       },
-      "id": "cea19904-d04e-4b70-9c6b-c4eb0cb33804",
+      "id": "45c2d89f-660d-484e-bfb9-f8df3cb79528",
       "name": "Every hour",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -25,25 +25,25 @@
         "assignments": {
           "assignments": [
             {
-              "id": "8eddbfb4-21e1-4104-bcf5-009b4efb649e",
+              "id": "7f6385ef-3ad6-401a-9b80-1ca3cac93737",
               "name": "keywords",
               "value": "openai, \"your brand\"",
               "type": "string"
             },
             {
-              "id": "cf6c0fe8-1ef5-4ecc-b307-c5d5ea969b43",
+              "id": "deb8218e-7e6b-49ee-894c-f464d71a1a39",
               "name": "region",
               "value": "US:en",
               "type": "string"
             },
             {
-              "id": "e9673043-cfe5-48f7-97f0-368410d8d70f",
+              "id": "42056d93-9e91-4636-8da5-fadbc2be20fd",
               "name": "timeframe",
               "value": "1h",
               "type": "string"
             },
             {
-              "id": "55fbb87b-5609-4780-89c8-46cd210ddd4b",
+              "id": "596ee46d-b7c3-4016-804d-48d052d30e0f",
               "name": "telegramChatId",
               "value": "YOUR_CHAT_ID",
               "type": "string"
@@ -52,7 +52,7 @@
         },
         "options": {}
       },
-      "id": "68c9c949-c245-47c8-b235-f113bc348dc2",
+      "id": "11cc9813-1516-4409-b3c0-4dfe2e60486a",
       "name": "Settings",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -74,7 +74,7 @@
           "timeout": 300000
         }
       },
-      "id": "f1aa4385-968c-4bf5-9632-79b85ca438d9",
+      "id": "67868926-59e0-4a8e-975e-c910d7d130e6",
       "name": "Run Google News (Apify)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -82,6 +82,9 @@
         440,
         300
       ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
       "credentials": {
         "httpHeaderAuth": {
           "id": "",
@@ -93,7 +96,7 @@
       "parameters": {
         "jsCode": "// Keeps the articles not sent before (remembered for 30 days).\nconst memory = $getWorkflowStaticData('global');\nmemory.sent = memory.sent || {};\nconst now = Date.now();\nfor (const [k, t] of Object.entries(memory.sent)) if (now - t > 30 * 24 * 3600 * 1000) delete memory.sent[k];\nconst firstRun = Object.keys(memory.sent).length === 0;\n\nconst out = [];\nconst articles = $input.all().map((i) => i.json).filter((a) => a.url)\n  .sort((a, b) => String(a.publishedAt).localeCompare(String(b.publishedAt)));\nfor (const a of articles) {\n  if (memory.sent[a.url]) continue;\n  memory.sent[a.url] = now;\n  if (firstRun) continue; // the first run only fills the memory, so you are not flooded\n  out.push({ json: {\n    ...a,\n    text: `📰 ${a.title}\\n${a.source || ''}${a.publishedAt ? ' · ' + a.publishedAt.slice(0, 16).replace('T', ' ') + ' UTC' : ''}\\n`\n      + `${a.description ? a.description + '\\n' : ''}${a.url}`,\n  } });\n}\nreturn out;"
       },
-      "id": "40b05052-35a9-4b30-a553-40786d7771fc",
+      "id": "ee93ecf2-1cf4-4df6-abf1-1f73eed20ee9",
       "name": "Keep new articles",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -111,7 +114,7 @@
           "disable_web_page_preview": true
         }
       },
-      "id": "edcc9335-6651-4715-8a58-f63b7b05d311",
+      "id": "b1a08281-bec3-49ca-aa88-2da7cc0e9343",
       "name": "Send to Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -119,7 +122,7 @@
         880,
         300
       ],
-      "webhookId": "93c07c5b-41be-4898-9121-5510d0aaf652",
+      "webhookId": "e6948554-c117-4528-8d83-ce9f0a2aad57",
       "credentials": {
         "telegramApi": {
           "id": "",
@@ -129,17 +132,17 @@
     },
     {
       "parameters": {
-        "content": "## Google News monitoring\nEvery hour, searches Google News for your keywords (brand, competitors, topics) and sends each new article to Telegram with its source and real URL. The first run only remembers the current articles; after that you get each new one once.\n\n## Setup\n1. **Run ... (Apify)** node: create a *Header Auth* credential, name `Authorization`, value `Bearer YOUR_APIFY_TOKEN` (free account at apify.com, token in Settings > API & Integrations).\n2. **Send to Telegram**: add your bot credential.\n3. **Settings**: put your Telegram chat ID and your own values.\n4. *Test workflow*, then *Activate*.",
-        "height": 420,
-        "width": 440
+        "content": "## Google News monitoring\nEvery hour, searches Google News for your keywords (brand, competitors, topics) and sends each new article to Telegram with its source and real URL. The first run only remembers the current articles; after that you get each new one once.\n\n### Requirements\n- An Apify account (free plan works) and its API token\n- A Telegram bot (create one with @BotFather) and your chat ID\n\n### Setup\n1. **Run ... (Apify)** node: create a *Header Auth* credential, name `Authorization`, value `Bearer YOUR_APIFY_TOKEN` (free account at apify.com, token in Settings > API & Integrations).\n2. **Send to Telegram**: add your bot credential.\n3. **Settings**: put your Telegram chat ID and your own values.\n4. *Test workflow*, then *Activate*.\n\n### Limitations\n- Up to 50 articles per keyword and run: keep `timeframe` close to the schedule (1h for hourly).\n- Articles already sent are remembered for 30 days. Memory is only kept for active (production) runs, not manual tests.",
+        "height": 660,
+        "width": 460
       },
-      "id": "467f10c2-ecf4-475c-ad02-74aeeaf6f111",
+      "id": "dbc55e4e-f503-4923-8ca5-030591bc7b94",
       "name": "Note -480",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -480,
-        120
+        -520,
+        0
       ]
     }
   ],
