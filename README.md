@@ -17,10 +17,10 @@ The data comes from two Apify Actors: [Google Trends Scraper](https://apify.com/
 ## Setup
 
 1. **Import**: in n8n, open a new workflow, click the three dots at the top right, choose **Import from File** and select the JSON file. Or copy the file's content and paste it into the canvas.
-2. **Apify credential**: create a free [Apify](https://apify.com) account and copy your API token from [Settings > API & Integrations](https://console.apify.com/settings/integrations). In the **Run ... (Apify)** node, create a **Header Auth** credential with name `Authorization` and value `Bearer your_apify_token`.
-3. **Telegram credential**: create a bot with [@BotFather](https://t.me/BotFather), then add a **Telegram** credential with its token in the Telegram node. Put your chat ID in the **Settings** node (send a message to [@userinfobot](https://t.me/userinfobot) to get it).
+2. **Apify credential**: create a free [Apify](https://apify.com) account and copy your API token from [Settings > API & Integrations](https://console.apify.com/settings/integrations). In the node that calls Apify (**Fetch ... (Apify)** or **Run ... (Apify)**), create a **Header Auth** credential with name `Authorization` and value `Bearer your_apify_token`.
+3. **Telegram credential**: create a bot with [@BotFather](https://t.me/BotFather), then add a **Telegram** credential with its token in the Telegram node. Put your chat ID in the parameters node (**Set Alert Parameters** or **Settings**) (send a message to [@userinfobot](https://t.me/userinfobot) to get it).
 4. **OpenAI credential** (AI digest only): add your OpenAI API key in the **OpenAI Chat Model** node. Any other chat model node can replace it.
-5. **Settings**: edit the **Settings** node (keywords, country, watch words), run the workflow once with **Test workflow**, then **Activate** it.
+5. **Parameters**: edit the parameters node (keywords, country, watch words), run the workflow once with **Test workflow**, then **Activate** it.
 
 ## Settings of each workflow
 

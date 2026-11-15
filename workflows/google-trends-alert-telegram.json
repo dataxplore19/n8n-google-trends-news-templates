@@ -1,7 +1,80 @@
 {
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
   "name": "Google Trends alert to Telegram",
   "nodes": [
     {
+      "parameters": {
+        "content": "## Google Trends alert to Telegram\n\n### How it works\n\nEvery hour, this workflow reads Google's trending searches for a country through the Apify Google Trends Scraper, keeps the trends whose term or related queries contain one of your watch words (whole words), and sends each new match to a Telegram chat. A term is sent once a week at most.\n\n### Requirements\n\n- An Apify account (the free plan works) and its API token\n- A Telegram bot (create one with @BotFather) and your chat ID\n\n### Setup steps\n\n1. In **Fetch Google Trends (Apify)**, create a *Header Auth* credential: name `Authorization`, value `Bearer YOUR_APIFY_TOKEN`.\n2. In **Send Alerts to Telegram**, add your Telegram bot credential.\n3. In **Set Alert Parameters**, set `country`, `hours` (4, 24, 48 or 168), `watchWords` and `telegramChatId`.\n4. Click *Test workflow*, check that a message arrives, then activate the workflow.\n\n### Customization\n\nChange the schedule, the country, the look-back window or the watch words, or replace the Telegram node with Slack, Discord or email.\n\n### Limitations\n\n- A word that trends and fades between two runs can be missed if the schedule is far apart from the look-back window.\n- Alerts already sent are remembered only for active (production) runs, not manual tests.\n- If the Apify call fails 3 times in a row, the run stops with an error and nothing is sent.",
+        "width": 480,
+        "height": 980
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        128
+      ],
+      "id": "95bbb9c2-7aa9-4c70-ab1c-04d249da4739",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Schedule and settings\n\nStarts the workflow on an hourly schedule and defines the country, time window, watched keywords, and Telegram destination used downstream.",
+        "width": 416,
+        "height": 336,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        128
+      ],
+      "id": "6bd91ef4-09af-4792-a1d8-2c527aaa8f0f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Fetch and filter trends\n\nCalls the Apify Google Trends endpoint and keeps only newly detected trending searches that match the configured watch words.",
+        "width": 416,
+        "height": 320,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        144
+      ],
+      "id": "8b2233dd-339c-4989-8307-c024d296fa58",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Send Telegram alert\n\nDelivers the filtered trend matches to the configured Telegram chat.",
+        "width": 240,
+        "height": 320,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        864,
+        144
+      ],
+      "id": "98c9918c-1001-44bc-9f26-cc6cd1c7c4b2",
+      "name": "Sticky Note3"
+    },
+    {
+      "id": "8261bb01-83ef-4030-9457-0e1eca028eba",
+      "name": "When Hourly Trigger Fires",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        0,
+        300
+      ],
       "parameters": {
         "rule": {
           "interval": [
@@ -11,192 +84,167 @@
           ]
         }
       },
-      "id": "8261bb01-83ef-4030-9457-0e1eca028eba",
-      "name": "Every hour",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        0,
-        300
-      ]
+      "typeVersion": 1.2
     },
     {
+      "id": "ea9d7fee-c446-4cd8-ba09-6baaafa119fc",
+      "name": "Set Alert Parameters",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        220,
+        300
+      ],
       "parameters": {
+        "options": {},
         "assignments": {
           "assignments": [
             {
               "id": "bc8d44ba-6eea-49ea-aa6b-b0a1dbde4bb6",
               "name": "country",
-              "value": "US",
-              "type": "string"
+              "type": "string",
+              "value": "US"
             },
             {
               "id": "7c874111-612e-4216-a27d-c9ef8e59f717",
               "name": "hours",
-              "value": "4",
-              "type": "string"
+              "type": "string",
+              "value": "4"
             },
             {
               "id": "85109af0-0fe3-4291-bca3-905269a93bb3",
               "name": "watchWords",
-              "value": "bitcoin, nvidia, openai",
-              "type": "string"
+              "type": "string",
+              "value": "bitcoin, nvidia, openai"
             },
             {
               "id": "3b3a9f39-5271-4f8f-b6ef-aa6b052e8bfa",
               "name": "telegramChatId",
-              "value": "YOUR_CHAT_ID",
-              "type": "string"
+              "type": "string",
+              "value": "YOUR_CHAT_ID"
             }
           ]
-        },
-        "options": {}
-      },
-      "id": "ea9d7fee-c446-4cd8-ba09-6baaafa119fc",
-      "name": "Settings",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        220,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.apify.com/v2/acts/data_xplorer~google-trends-fast-scraper/run-sync-get-dataset-items",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ mode: \"trending\", trendingSearchesCountry: $json.country, trendingSearchesTimeframe: String($json.hours), trendingSearchesMaxItems: 100 }) }}",
-        "options": {
-          "timeout": 300000
         }
       },
+      "typeVersion": 3.4
+    },
+    {
       "id": "44207635-bff8-4eeb-9705-bab13f5580b8",
-      "name": "Run Google Trends (Apify)",
+      "name": "Fetch Google Trends (Apify)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "maxTries": 3,
       "position": [
         440,
         300
       ],
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000,
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/data_xplorer~google-trends-fast-scraper/run-sync-get-dataset-items",
+        "method": "POST",
+        "options": {
+          "timeout": 300000
+        },
+        "jsonBody": "={{ JSON.stringify({ mode: \"trending\", trendingSearchesCountry: $json.country, trendingSearchesTimeframe: String($json.hours), trendingSearchesMaxItems: 100 }) }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
       "credentials": {
         "httpHeaderAuth": {
           "id": "",
           "name": "Apify (Header Auth)"
         }
-      }
+      },
+      "retryOnFail": true,
+      "typeVersion": 4.2,
+      "waitBetweenTries": 5000
     },
     {
-      "parameters": {
-        "jsCode": "// Keeps the trending searches that match a watch word, once per term.\nconst s = $('Settings').first().json;\nconst watch = String(s.watchWords || '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean);\nconst esc = (w) => w.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\nconst matches = (text, w) => new RegExp(`(^|[^\\\\p{L}\\\\p{N}])${esc(w)}($|[^\\\\p{L}\\\\p{N}])`, 'u').test(text);\n\nconst memory = $getWorkflowStaticData('global');\nmemory.sent = memory.sent || {};\nconst now = Date.now();\nfor (const [k, t] of Object.entries(memory.sent)) if (now - t > 7 * 24 * 3600 * 1000) delete memory.sent[k];\n\nconst out = [];\nfor (const item of $input.all()) {\n  for (const t of item.json.trending_searches || []) {\n    const text = [t.term, ...(t.related_terms || [])].join(' ').toLowerCase();\n    const hits = watch.filter((w) => matches(text, w));\n    const key = `${s.country}:${t.term}`;\n    if (!hits.length || memory.sent[key]) continue;\n    memory.sent[key] = now;\n    out.push({ json: {\n      term: t.term, volume: t.trend_volume, rank: t.rank, matches: hits,\n      text: `📈 Trending on Google (${s.country}): \"${t.term}\" (${t.trend_volume || '?'} searches, rank ${t.rank})\\n`\n        + `Matches: ${hits.join(', ')}\\nRelated: ${(t.related_terms || []).slice(1, 6).join(', ')}\\n`\n        + `https://trends.google.com/trending?geo=${s.country}`,\n    } });\n  }\n}\nreturn out;"
-      },
       "id": "296c9876-6bc6-487a-80fc-7fdad61c4c16",
-      "name": "Keep new matches",
+      "name": "Filter Matching Trends",
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
       "position": [
         660,
         300
-      ]
+      ],
+      "parameters": {
+        "jsCode": "// Keeps the trending searches that match a watch word, once per term.\nconst s = $('Set Alert Parameters').first().json;\nconst watch = String(s.watchWords || '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean);\nconst esc = (w) => w.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\nconst matches = (text, w) => new RegExp(`(^|[^\\\\p{L}\\\\p{N}])${esc(w)}($|[^\\\\p{L}\\\\p{N}])`, 'u').test(text);\n\nconst memory = $getWorkflowStaticData('global');\nmemory.sent = memory.sent || {};\nconst now = Date.now();\nfor (const [k, t] of Object.entries(memory.sent)) if (now - t > 7 * 24 * 3600 * 1000) delete memory.sent[k];\n\nconst out = [];\nfor (const item of $input.all()) {\n  for (const t of item.json.trending_searches || []) {\n    const text = [t.term, ...(t.related_terms || [])].join(' ').toLowerCase();\n    const hits = watch.filter((w) => matches(text, w));\n    const key = `${s.country}:${t.term}`;\n    if (!hits.length || memory.sent[key]) continue;\n    memory.sent[key] = now;\n    out.push({ json: {\n      term: t.term, volume: t.trend_volume, rank: t.rank, matches: hits,\n      text: `📈 Trending on Google (${s.country}): \"${t.term}\" (${t.trend_volume || '?'} searches, rank ${t.rank})\\n`\n        + `Matches: ${hits.join(', ')}\\nRelated: ${(t.related_terms || []).slice(1, 6).join(', ')}\\n`\n        + `https://trends.google.com/trending?geo=${s.country}`,\n    } });\n  }\n}\nreturn out;"
+      },
+      "typeVersion": 2
     },
     {
+      "id": "606bf9aa-c415-46c1-9280-c3a11d33d3fe",
+      "name": "Send Alerts to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        912,
+        304
+      ],
+      "webhookId": "2ada8350-3b3d-459e-9c74-26147b7263f0",
       "parameters": {
-        "chatId": "={{ $('Settings').first().json.telegramChatId }}",
         "text": "={{ $json.text }}",
+        "chatId": "={{ $('Set Alert Parameters').first().json.telegramChatId }}",
         "additionalFields": {
           "appendAttribution": false,
           "disable_web_page_preview": true
         }
       },
-      "id": "606bf9aa-c415-46c1-9280-c3a11d33d3fe",
-      "name": "Send to Telegram",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        880,
-        300
-      ],
-      "webhookId": "2ada8350-3b3d-459e-9c74-26147b7263f0",
       "credentials": {
         "telegramApi": {
           "id": "",
           "name": "Telegram account"
         }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## Google Trends alert\nEvery hour, reads Google's trending searches for a country and sends a Telegram message when a trend matches one of your watch words (whole words, also checked in related queries). Each term is sent once a week at most.\n\n### Requirements\n- An Apify account (free plan works) and its API token\n- A Telegram bot (create one with @BotFather) and your chat ID\n\n### Setup\n1. **Run ... (Apify)** node: create a *Header Auth* credential, name `Authorization`, value `Bearer YOUR_APIFY_TOKEN` (free account at apify.com, token in Settings > API & Integrations).\n2. **Send to Telegram**: add your bot credential.\n3. **Settings**: put your Telegram chat ID and your own values.\n4. *Test workflow*, then *Activate*.\n\n### Limitations\n- Google's trending list covers the last 4 to 168 hours; a word that trends and fades between two runs can be missed with long intervals.\n- If the Apify call fails 3 times in a row, the run stops with an error and nothing is sent.",
-        "height": 660,
-        "width": 460
       },
-      "id": "2f765322-9c6e-43a1-b31b-ce1345e7b450",
-      "name": "Note -480",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        -520,
-        0
-      ]
+      "typeVersion": 1.2
     }
   ],
-  "connections": {
-    "Every hour": {
-      "main": [
-        [
-          {
-            "node": "Settings",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Settings": {
-      "main": [
-        [
-          {
-            "node": "Run Google Trends (Apify)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Run Google Trends (Apify)": {
-      "main": [
-        [
-          {
-            "node": "Keep new matches",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Keep new matches": {
-      "main": [
-        [
-          {
-            "node": "Send to Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
+  "pinData": {},
   "settings": {
     "executionOrder": "v1"
   },
-  "pinData": {},
-  "meta": {
-    "templateCredsSetupCompleted": false
+  "connections": {
+    "Set Alert Parameters": {
+      "main": [
+        [
+          {
+            "node": "Fetch Google Trends (Apify)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Hourly Trigger Fires": {
+      "main": [
+        [
+          {
+            "node": "Set Alert Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Matching Trends": {
+      "main": [
+        [
+          {
+            "node": "Send Alerts to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Google Trends (Apify)": {
+      "main": [
+        [
+          {
+            "node": "Filter Matching Trends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   }
 }
